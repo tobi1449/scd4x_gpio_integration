@@ -1,10 +1,10 @@
 {
-    "name": "Integration blueprint",
+    "name": "SCD4x GPIO Integration",
     "hacs": "1.6.0",
     "domains": [
-        "binary_sensor",
-        "sensor",
-        "switch"
+        "temperature_sensor",
+        "co2_sensor",
+        "humidity_sensor"
     ],
     "homeassistant": "0.118.0"
 }

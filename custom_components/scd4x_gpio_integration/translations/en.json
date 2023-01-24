@@ -1,0 +1,28 @@
+{
+    "title": "SCD4X Integration",
+    "config": {
+        "step": {
+            "user": {
+                "title": "SCD4X Integration",
+                "description": "Enter the device path (usually /dev/i2c-x) of the SCD4x sensor.",
+                "data": {
+                    "i2cpath": "I2C device path"
+                }
+            }
+        },
+        "error": {
+            "unable_to_connect": "Unable to connect to sensor. Path might be invalid."
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "temperature_sensor": "Temperature Sensor enabled",
+                    "co2_sensor": "CO2 Sensor enabled",
+                    "humidity_sensor": "Humidity Sensor enabled"
+                }
+            }
+        }
+    }
+}

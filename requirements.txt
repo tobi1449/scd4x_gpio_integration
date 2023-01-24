@@ -1,0 +1,4 @@
+homeassistant~=2023.1.7
+sensirion_i2c_driver
+sensirion_i2c_scd
+voluptuous~=0.13.1

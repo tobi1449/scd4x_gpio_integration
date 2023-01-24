@@ -1,87 +1,74 @@
 """Adds config flow for Blueprint."""
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import voluptuous as vol
 
-from .api import IntegrationBlueprintApiClient
+from . import SCD4xAPI
 from .const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
     PLATFORMS,
+    CONF_I2C, CONF_SERIAL
 )
 
 
-class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Blueprint."""
+class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
         self._errors = {}
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
         self._errors = {}
 
-        # Uncomment the next 2 lines if only a single instance of the integration is allowed:
-        # if self._async_current_entries():
-        #     return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None:
-            valid = await self._test_credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
+            valid, serial = await self._test_i2cpath(user_input[CONF_I2C])
             if valid:
+                user_input[CONF_SERIAL] = serial
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                    title=user_input[CONF_I2C], data=user_input
                 )
             else:
-                self._errors["base"] = "auth"
+                self._errors["base"] = "unable_to_connect"
 
             return await self._show_config_form(user_input)
 
-        user_input = {}
+        user_input = {CONF_I2C: ""}
         # Provide defaults for form
-        user_input[CONF_USERNAME] = ""
-        user_input[CONF_PASSWORD] = ""
 
         return await self._show_config_form(user_input)
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return BlueprintOptionsFlowHandler(config_entry)
+        return Scd4xOptionsFlowHandler(config_entry)
 
     async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
-        """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
-                    vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                    vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
                 }
             ),
             errors=self._errors,
         )
 
-    async def _test_credentials(self, username, password):
-        """Return true if credentials is valid."""
+    async def _test_i2cpath(self, i2cpath):
         try:
-            session = async_create_clientsession(self.hass)
-            client = IntegrationBlueprintApiClient(username, password, session)
-            await client.async_get_data()
-            return True
+            api = SCD4xAPI(i2cpath)
+            await api.async_initialize()
+            serial = await api.async_get_serial()
+            await api.async_stop()
+            return True, serial
         except Exception:  # pylint: disable=broad-except
             pass
-        return False
+        return False, ""
 
 
-class BlueprintOptionsFlowHandler(config_entries.OptionsFlow):
+class Scd4xOptionsFlowHandler(config_entries.OptionsFlow):
     """Blueprint config flow options handler."""
 
     def __init__(self, config_entry):
@@ -94,7 +81,6 @@ class BlueprintOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
         if user_input is not None:
             self.options.update(user_input)
             return await self._update_options()
@@ -112,5 +98,5 @@ class BlueprintOptionsFlowHandler(config_entries.OptionsFlow):
     async def _update_options(self):
         """Update config entry options."""
         return self.async_create_entry(
-            title=self.config_entry.data.get(CONF_USERNAME), data=self.options
+            title=self.config_entry.data.get(CONF_I2C), data=self.options
         )

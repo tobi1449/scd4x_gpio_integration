@@ -1,30 +1,24 @@
 """
-Custom integration to integrate integration_blueprint with Home Assistant.
-
-For more details about this integration, please refer to
-https://github.com/custom-components/integration_blueprint
+Custom integration to integrate scd4x_gpio_integration with Home Assistant.
 """
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import IntegrationBlueprintApiClient
+from .scd4x_api import SCD4xAPI
 
 from .const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
     PLATFORMS,
-    STARTUP_MESSAGE,
+    STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR,
 )
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -40,13 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data.setdefault(DOMAIN, {})
         _LOGGER.info(STARTUP_MESSAGE)
 
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    i2cpath = entry.data.get(CONF_I2C)
 
-    session = async_get_clientsession(hass)
-    client = IntegrationBlueprintApiClient(username, password, session)
-
-    coordinator = BlueprintDataUpdateCoordinator(hass, client=client)
+    coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath)
+    await coordinator.async_setup()
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -57,37 +48,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for platform in PLATFORMS:
         if entry.options.get(platform, True):
             coordinator.platforms.append(platform)
-            hass.async_add_job(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+            await hass.async_add_job(hass.config_entries.async_forward_entry_setup(entry, platform))
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
-class BlueprintDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the API."""
+class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
-    def __init__(
-        self, hass: HomeAssistant, client: IntegrationBlueprintApiClient
-    ) -> None:
-        """Initialize."""
-        self.api = client
+    def __init__(self, hass: HomeAssistant, i2cpath: str) -> None:
         self.platforms = []
+
+        self._i2cpath = i2cpath
+        self._api = SCD4xAPI(i2cpath)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-    async def _async_update_data(self):
-        """Update data via library."""
+    async def async_stop(self) -> None:
         try:
-            return await self.api.async_get_data()
+            await self._api.async_stop()
+        except Exception as exception:
+            raise ConfigEntryError from exception
+
+    async def _async_update_data(self):
+        try:
+            sensor_data = await self._api.async_read_data()
+            data = {
+                CO2_SENSOR: sensor_data[0].co2,
+                TEMP_SENSOR: sensor_data[1].degrees_celsius,
+                HUMIDITY_SENSOR: sensor_data[2].percent_rh
+            }
+            return data
         except Exception as exception:
             raise UpdateFailed() from exception
+
+    async def async_setup(self) -> None:
+        try:
+            await self._api.async_initialize()
+        except Exception as exception:
+            raise ConfigEntryError from exception
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
+
     unloaded = all(
         await asyncio.gather(
             *[
@@ -99,6 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if unloaded:
         hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.async_stop()
 
     return unloaded
 
