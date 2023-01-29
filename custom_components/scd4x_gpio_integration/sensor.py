@@ -13,6 +13,7 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -77,6 +78,7 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._serial = self.config_entry.data[CONF_SERIAL]
         self._icon = icon
+        self.entity_id = generate_entity_id("sensor.{}", key)
 
     @property
     def name(self):
