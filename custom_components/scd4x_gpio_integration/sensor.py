@@ -21,7 +21,7 @@ from .const import (
     TEMP_SENSOR,
     DOMAIN,
     CO2_SENSOR,
-    HUMIDITY_SENSOR, CONF_SERIAL,
+    HUMIDITY_SENSOR, CONF_SERIAL, HUMIDITY_ICON, CO2_ICON,
 )
 from .entity import SCD4XEntity
 
@@ -37,10 +37,10 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = [
         Scd4xSensor(
-            coordinator, entry, HUMIDITY_SENSOR, SensorDeviceClass.HUMIDITY, PERCENTAGE
+            coordinator, entry, HUMIDITY_SENSOR, SensorDeviceClass.HUMIDITY, PERCENTAGE, HUMIDITY_ICON
         ),
         Scd4xSensor(
-            coordinator, entry, TEMP_SENSOR, SensorDeviceClass.TEMPERATURE, TEMP_CELSIUS
+            coordinator, entry, TEMP_SENSOR, SensorDeviceClass.TEMPERATURE, TEMP_CELSIUS, TEMP_ICON
         ),
         Scd4xSensor(
             coordinator,
@@ -48,6 +48,7 @@ async def async_setup_entry(
             CO2_SENSOR,
             SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
+            CO2_ICON
         ),
     ]
 
@@ -68,12 +69,14 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
             key: str,
             device_class: SensorDeviceClass,
             unit_of_measurement: str,
+            icon: str,
     ):
         super().__init__(coordinator, config_entry)
         self._key = key
         self._device_class = device_class
         self._unit_of_measurement = unit_of_measurement
         self._serial = self.config_entry.data[CONF_SERIAL]
+        self._icon = icon
 
     @property
     def name(self):
@@ -93,7 +96,7 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        return TEMP_ICON
+        return self._icon
 
     @property
     def state_class(self) -> SensorStateClass | str | None:
