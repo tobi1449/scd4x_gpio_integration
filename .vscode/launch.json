@@ -22,14 +22,15 @@
       "type": "python",
       "request": "attach",
       "port": 5678,
-      "host": "localhost",
-      "logToFile": true,
+      "host": "raspi.home",
+      "logToFile": true,      
+      "redirectOutput": true,      
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",
-          "remoteRoot": "/usr/src/homeassistant"
+          "remoteRoot": "/config"
         }
-      ]
+      ]      
     }
   ]
 }

@@ -30,17 +30,22 @@ async def async_setup(hass: HomeAssistant, config: Config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
+    _LOGGER.info("Setting up SCD4x GPIO Integration")
     if hass.data.get(DOMAIN) is None:
         hass.data.setdefault(DOMAIN, {})
         _LOGGER.info(STARTUP_MESSAGE)
 
     i2cpath = entry.data.get(CONF_I2C)
 
+    _LOGGER.info(f"Configured I2C Path is {i2cpath}")
+    print(f"Configured I2C Path is {i2cpath}")
+
     coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath)
     await coordinator.async_setup()
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
+        _LOGGER.info("Coordinator Last Update Success is false")
         raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -57,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, i2cpath: str) -> None:
+        _LOGGER.info("Initializing coordinator for SCD4x GPIO Integration")
         self.platforms = []
 
         self._i2cpath = i2cpath
@@ -66,17 +72,23 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_stop(self) -> None:
         try:
+            _LOGGER.info("Stopping SCD4x API")
             await self._api.async_stop()
         except Exception as exception:
             raise ConfigEntryError from exception
 
     async def _async_update_data(self):
         try:
+            _LOGGER.info("Try to get new data from SCD4x API")
             sensor_data = await self._api.async_read_data()
+
+            if not sensor_data:
+                raise UpdateFailed()
+
             data = {
-                CO2_SENSOR: sensor_data[0].co2,
-                TEMP_SENSOR: sensor_data[1].degrees_celsius,
-                HUMIDITY_SENSOR: sensor_data[2].percent_rh
+                CO2_SENSOR: sensor_data[0],
+                TEMP_SENSOR: sensor_data[1],
+                HUMIDITY_SENSOR: sensor_data[2]
             }
             return data
         except Exception as exception:
@@ -84,8 +96,10 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup(self) -> None:
         try:
+            _LOGGER.info("Setting up SCD4x coordinator")
             await self._api.async_initialize()
         except Exception as exception:
+            await self._api.async_stop()
             raise ConfigEntryError from exception
 
 

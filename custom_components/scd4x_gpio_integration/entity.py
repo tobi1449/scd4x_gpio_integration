@@ -7,7 +7,7 @@ from .const import DOMAIN, NAME, VERSION, ATTRIBUTION, CONF_SERIAL
 
 
 class SCD4XEntity(CoordinatorEntity):
-    def __init__(self, coordinator, config_entry : ConfigEntry):
+    def __init__(self, coordinator, config_entry: ConfigEntry):
         super().__init__(coordinator)
         self.config_entry = config_entry
         self._serial = config_entry.data[CONF_SERIAL]

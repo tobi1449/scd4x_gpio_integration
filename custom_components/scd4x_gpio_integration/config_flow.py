@@ -2,6 +2,7 @@
 from homeassistant import config_entries
 from homeassistant.core import callback
 import voluptuous as vol
+import logging
 
 from . import SCD4xAPI
 from .const import (
@@ -10,9 +11,10 @@ from .const import (
     CONF_I2C, CONF_SERIAL
 )
 
+_LOGGER: logging.Logger = logging.getLogger(__package__)
+
 
 class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
@@ -24,8 +26,11 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
+            _LOGGER.info(f"User gave {user_input[CONF_I2C]} as path. Testing.")
             valid, serial = await self._test_i2cpath(user_input[CONF_I2C])
+            _LOGGER.info(f"Path Test Result: {valid}")
             if valid:
+                _LOGGER.info(f"Device Serial Number: {serial}")
                 user_input[CONF_SERIAL] = serial
                 return self.async_create_entry(
                     title=user_input[CONF_I2C], data=user_input
@@ -57,15 +62,27 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _test_i2cpath(self, i2cpath):
+        serial = None
         try:
+            _LOGGER.info(f"Testing path {i2cpath}")
+            _LOGGER.info(f"Initializing API")
             api = SCD4xAPI(i2cpath)
-            await api.async_initialize()
-            serial = await api.async_get_serial()
+            serial = await api.async_initialize()
+        except Exception as exception:
+            _LOGGER.error("Exception while testing i2c path.")
             await api.async_stop()
-            return True, serial
-        except Exception:  # pylint: disable=broad-except
-            pass
-        return False, ""
+            print(exception.args)
+            raise exception
+        finally:
+            _LOGGER.info(f"Stopping API")
+            await api.async_stop()
+
+            if serial is None or serial == 0:
+                _LOGGER.info(f"No serial found: {serial}")
+                return False,
+            else:
+                _LOGGER.info(f"Serial found: {serial}")
+                return True, serial
 
 
 class Scd4xOptionsFlowHandler(config_entries.OptionsFlow):
