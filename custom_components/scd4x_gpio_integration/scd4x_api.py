@@ -82,6 +82,12 @@ class SCD4xAPI:
                 _LOGGER.info(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
                 return co2.co2, temp.degrees_celsius, humidity.percent_rh
 
+    async def async_set_altitude(self, altitude: float):
+        if not self._connection_established:
+            return
+
+        await self._scd4x.async_set_sensor_altitude(altitude)
+
     async def async_get_serial_number(self):
         if not self._connection_established:
             return False
