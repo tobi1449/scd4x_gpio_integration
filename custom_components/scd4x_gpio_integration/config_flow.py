@@ -33,7 +33,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.info(f"Device Serial Number: {serial}")
                 user_input[CONF_SERIAL] = serial
                 return self.async_create_entry(
-                    title=user_input[CONF_I2C], data=user_input
+                    title="SCD4x Sensor", data=user_input
                 )
             else:
                 self._errors["base"] = "unable_to_connect"
@@ -44,11 +44,6 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Provide defaults for form
 
         return await self._show_config_form(user_input)
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        return Scd4xOptionsFlowHandler(config_entry)
 
     async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
         return self.async_show_form(
@@ -83,37 +78,3 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 _LOGGER.info(f"Serial found: {serial}")
                 return True, serial
-
-
-class Scd4xOptionsFlowHandler(config_entries.OptionsFlow):
-    """Blueprint config flow options handler."""
-
-    def __init__(self, config_entry):
-        """Initialize HACS options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
-    async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
-        """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(self, user_input=None):
-        if user_input is not None:
-            self.options.update(user_input)
-            return await self._update_options()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(x, default=self.options.get(x, True)): bool
-                    for x in sorted(PLATFORMS)
-                }
-            ),
-        )
-
-    async def _update_options(self):
-        """Update config entry options."""
-        return self.async_create_entry(
-            title=self.config_entry.data.get(CONF_I2C), data=self.options
-        )
