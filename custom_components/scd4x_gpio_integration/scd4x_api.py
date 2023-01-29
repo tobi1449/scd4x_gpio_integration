@@ -80,7 +80,7 @@ class SCD4xAPI:
                 _LOGGER.info("Data ready, getting data")
                 co2, temp, humidity = await self._scd4x.async_read_measurement()
                 _LOGGER.info(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
-                return co2.co2, temp.degrees_celsius, humidity.percent_rh
+                return round(co2.co2, 2), round(temp.degrees_celsius, 2), round(humidity.percent_rh, 2)
 
     async def async_set_altitude(self, altitude: float):
         if not self._connection_established:
