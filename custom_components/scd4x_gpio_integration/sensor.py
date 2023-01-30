@@ -38,12 +38,25 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     sensors = [
         Scd4xSensor(
-            coordinator, entry, HUMIDITY_SENSOR, SensorDeviceClass.HUMIDITY, PERCENTAGE, HUMIDITY_ICON
+            hass,
+            coordinator,
+            entry,
+            HUMIDITY_SENSOR,
+            SensorDeviceClass.HUMIDITY,
+            PERCENTAGE,
+            HUMIDITY_ICON
         ),
         Scd4xSensor(
-            coordinator, entry, TEMP_SENSOR, SensorDeviceClass.TEMPERATURE, TEMP_CELSIUS, TEMP_ICON
+            hass,
+            coordinator,
+            entry,
+            TEMP_SENSOR,
+            SensorDeviceClass.TEMPERATURE,
+            TEMP_CELSIUS,
+            TEMP_ICON
         ),
         Scd4xSensor(
+            hass,
             coordinator,
             entry,
             CO2_SENSOR,
@@ -65,6 +78,7 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
 
     def __init__(
             self,
+            hass,
             coordinator,
             config_entry,
             key: str,
@@ -78,7 +92,7 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._serial = self.config_entry.data[CONF_SERIAL]
         self._icon = icon
-        self.entity_id = generate_entity_id("sensor.{}", key)
+        self.entity_id = generate_entity_id("sensor.{}", key, hass=hass)
 
     @property
     def name(self):
