@@ -1,4 +1,1 @@
 homeassistant
-sensirion_i2c_driver
-sensirion_i2c_scd
-pydevd-pycharm
