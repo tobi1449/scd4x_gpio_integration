@@ -23,7 +23,7 @@ class SCD4xAPI:
         self._connection_established = False
         self._i2cpath = i2cpath
 
-    async def async_initialize(self) -> str:
+    async def async_initialize(self) -> int:
         async with async_timeout.timeout(TIMEOUT):
             _LOGGER.info("Initialize API called.")
             _LOGGER.info("Creating i2c transceiver.")
@@ -62,12 +62,12 @@ class SCD4xAPI:
                 if self._scd4x is not None:
                     await self._scd4x.async_stop_periodic_measurement()
             except Exception as exception:
-                _LOGGER.warn(f"Unable to stop SCD4x perodic measurements: {exception}")
+                _LOGGER.warning(f"Unable to stop SCD4x perodic measurements: {exception}")
             try:
                 if self._i2c_transceiver is not None:
                     self._i2c_transceiver.close()
             except Exception as exception:
-                _LOGGER.warn(f"Unable to close i2c transceiver: {exception}")
+                _LOGGER.warning(f"Unable to close i2c transceiver: {exception}")
             finally:
                 self._connection_established = False
 
@@ -83,6 +83,15 @@ class SCD4xAPI:
                 return round(co2.co2, 2), round(temp.degrees_celsius, 2), round(humidity.percent_rh, 2)
             else:
                 _LOGGER.info("Sensor not ready")
+                await asyncio.sleep(2)
+
+                _LOGGER.info("Retrying")
+                if await self._scd4x.async_get_data_ready_status():
+                    co2, temp, humidity = await self._scd4x.async_read_measurement()
+                    _LOGGER.info(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
+                    return round(co2.co2, 2), round(temp.degrees_celsius, 2), round(humidity.percent_rh, 2)
+                else:
+                    _LOGGER.info("Still not ready")
 
     async def async_set_altitude(self, altitude: float):
         if not self._connection_established:
