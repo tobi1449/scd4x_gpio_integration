@@ -1,13 +1,11 @@
 """Adds config flow for Blueprint."""
 from homeassistant import config_entries
-from homeassistant.core import callback
 import voluptuous as vol
 import logging
 
 from . import SCD4xAPI
 from .const import (
     DOMAIN,
-    PLATFORMS,
     CONF_I2C, CONF_SERIAL
 )
 
