@@ -7,7 +7,7 @@
   "issue_tracker": "https://github.com/tobi1449/scd4x_gpio_integration/issues",
   "version": "0.0.1",
   "config_flow": true,
-  "requirements": [],
+  "requirements": ["sensirion-i2c-scd","sensirion-i2c-driver", "asyncer"],
   "codeowners": [
     "@tobi1449"
   ]

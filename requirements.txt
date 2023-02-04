@@ -1,2 +1,5 @@
 homeassistant
 voluptuous
+asyncer
+sensirion_i2c_driver
+sensirion_i2c_scd
