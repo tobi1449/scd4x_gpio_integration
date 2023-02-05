@@ -25,7 +25,7 @@ PLATFORMS = [Platform.SENSOR]
 # Configuration and options
 CONF_ENABLED = "enabled"
 CONF_I2C = "i2c_path"
-CONF_SERIAL = "device_serialnumber"
+CONF_SERIAL = "device_serial_number"
 
 # Defaults
 DEFAULT_NAME = DOMAIN

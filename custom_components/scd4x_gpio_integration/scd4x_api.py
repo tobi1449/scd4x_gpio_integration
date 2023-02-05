@@ -91,7 +91,7 @@ class SCD4xAPI:
                 if self._scd4x is not None:
                     await asyncify(stop_periodic_measurement)(scd4x=self._scd4x)
             except Exception as exception:
-                _LOGGER.warning(f"Unable to stop SCD4x perodic measurements: {exception}")
+                _LOGGER.warning(f"Unable to stop SCD4x periodic measurements: {exception}")
             try:
                 if self._i2c_transceiver is not None:
                     self._i2c_transceiver.close()
