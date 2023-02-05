@@ -23,8 +23,8 @@ def reinit(scd4x: Scd4xI2cDevice):
     scd4x.reinit()
 
 
-def read_serial_number(scd4x: Scd4xI2cDevice):
-    scd4x.read_serial_number()
+def read_serial_number(scd4x: Scd4xI2cDevice) -> int:
+    return scd4x.read_serial_number()
 
 
 def start_periodic_measurement(scd4x: Scd4xI2cDevice):
