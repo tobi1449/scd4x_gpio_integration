@@ -52,7 +52,7 @@ class SCD4xAPI:
         self._connection_established = False
         self._i2cpath = i2cpath
 
-    async def async_initialize(self) -> int:
+    async def async_initialize(self, altitude: int) -> int:
         async with async_timeout.timeout(TIMEOUT):
             _LOGGER.info("Initialize API called.")
             _LOGGER.info("Creating i2c transceiver.")
@@ -68,6 +68,12 @@ class SCD4xAPI:
             _LOGGER.info("Stopping periodic measurements.")
             await asyncify(stop_periodic_measurement)(scd4x=self._scd4x)
             await asyncio.sleep(1)
+
+            if altitude is not None:
+                await self.async_set_altitude(altitude)
+            else:
+                await self.async_set_altitude(0)
+
             _LOGGER.info("Reinitializing device.")
             await asyncify(reinit)(scd4x=self._scd4x)
             await asyncio.sleep(5)

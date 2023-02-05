@@ -6,7 +6,7 @@ import logging
 from . import SCD4xAPI
 from .const import (
     DOMAIN,
-    CONF_I2C, CONF_SERIAL
+    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -26,19 +26,27 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             _LOGGER.info(f"User gave {user_input[CONF_I2C]} as path. Testing.")
             valid, serial = await self._test_i2cpath(user_input[CONF_I2C])
-            _LOGGER.info(f"Path Test Result: {valid}")
+
             if valid:
                 _LOGGER.info(f"Device Serial Number: {serial}")
                 user_input[CONF_SERIAL] = serial
-                return self.async_create_entry(
-                    title="SCD4x Sensor", data=user_input
-                )
             else:
                 self._errors["base"] = "unable_to_connect"
 
+            altitude = user_input[CONF_ALTITUDE]
+
+            if altitude is int and -100 < altitude < 10000:
+                pass
+            else:
+                valid = False
+                self._errors["base"] = "invalid_altitude"
+
+            if valid:
+                return self.async_create_entry(title="SCD4x Sensor", data=user_input)
+
             return await self._show_config_form(user_input)
 
-        user_input = {CONF_I2C: ""}
+        user_input = {CONF_I2C: "", CONF_ALTITUDE: None}
         # Provide defaults for form
 
         return await self._show_config_form(user_input)
@@ -49,6 +57,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
+                    vol.Optional(CONF_ALTITUDE, default=user_input[CONF_ALTITUDE]): int,
                 }
             ),
             errors=self._errors,
@@ -72,7 +81,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if serial is None or serial == 0:
                 _LOGGER.info(f"No serial found: {serial}")
-                return False,
+                return False, None
             else:
                 _LOGGER.info(f"Serial found: {serial}")
                 return True, serial

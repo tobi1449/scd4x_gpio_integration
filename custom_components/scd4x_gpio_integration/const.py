@@ -26,6 +26,7 @@ PLATFORMS = [Platform.SENSOR]
 CONF_ENABLED = "enabled"
 CONF_I2C = "i2c_path"
 CONF_SERIAL = "device_serial_number"
+CONF_ALTITUDE = "altitude"
 
 # Defaults
 DEFAULT_NAME = DOMAIN
