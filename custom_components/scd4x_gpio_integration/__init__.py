@@ -4,6 +4,7 @@ Custom integration to integrate scd4x_gpio_integration with Home Assistant.
 import asyncio
 import logging
 from datetime import timedelta
+from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
@@ -15,7 +16,7 @@ from .scd4x_api import SCD4xAPI
 from .const import (
     DOMAIN,
     PLATFORMS,
-    STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR,
+    STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR, CONF_ALTITUDE,
 )
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -36,11 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.info(STARTUP_MESSAGE)
 
     i2cpath = entry.data.get(CONF_I2C)
+    altitude = None
+    if CONF_ALTITUDE in entry.data:
+        altitude = entry.data.get(CONF_ALTITUDE)
 
     _LOGGER.info(f"Configured I2C Path is {i2cpath}")
-    print(f"Configured I2C Path is {i2cpath}")
+    _LOGGER.info(f"Configured Altitude is {altitude}")
 
-    coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath)
+    coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath, altitude)
     await coordinator.async_setup()
     await coordinator.async_refresh()
 
@@ -61,12 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
-    def __init__(self, hass: HomeAssistant, i2cpath: str) -> None:
+    def __init__(self, hass: HomeAssistant, i2cpath: str, altitude: Optional[int]) -> None:
         _LOGGER.info("Initializing coordinator for SCD4x GPIO Integration")
         self.platforms = []
 
-        self._i2cpath = i2cpath
-        self._api = SCD4xAPI(i2cpath)
+        self._api = SCD4xAPI(i2cpath, altitude)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 

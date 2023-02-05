@@ -44,15 +44,16 @@ def set_sensor_altitude(scd4x: Scd4xI2cDevice, sensor_altitude):
 
 
 class SCD4xAPI:
-    def __init__(self, i2cpath: str) -> None:
+    def __init__(self, i2cpath: str, altitude: Optional[int]) -> None:
         _LOGGER.info("Initializing SCD4x API")
         self._scd4x = None
         self._i2c_connection = None
         self._i2c_transceiver = None
         self._connection_established = False
         self._i2cpath = i2cpath
+        self._altitude = altitude
 
-    async def async_initialize(self, altitude: int) -> int:
+    async def async_initialize(self) -> int:
         async with async_timeout.timeout(TIMEOUT):
             _LOGGER.info("Initialize API called.")
             _LOGGER.info("Creating i2c transceiver.")
@@ -69,18 +70,20 @@ class SCD4xAPI:
             await asyncify(stop_periodic_measurement)(scd4x=self._scd4x)
             await asyncio.sleep(1)
 
-            if altitude is not None:
-                await self.async_set_altitude(altitude)
+            _LOGGER.info("Reading serial number.")
+            serial = await asyncify(read_serial_number)(scd4x=self._scd4x)
+            _LOGGER.info(f"Serial Number {serial}")
+
+            if self._altitude is not None:
+                _LOGGER.info(f"Setting altitude to {self._altitude}")
+                await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=self._altitude)
             else:
-                await self.async_set_altitude(0)
+                _LOGGER.info("Setting altitude to 0")
+                await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=0)
 
             _LOGGER.info("Reinitializing device.")
             await asyncify(reinit)(scd4x=self._scd4x)
             await asyncio.sleep(5)
-
-            _LOGGER.info("Reading serial number.")
-            serial = await asyncify(read_serial_number)(scd4x=self._scd4x)
-            _LOGGER.info(f"Serial Number {serial}")
 
             await asyncify(start_periodic_measurement)(scd4x=self._scd4x)
             _LOGGER.info("Starting periodic measurements.")
@@ -120,8 +123,4 @@ class SCD4xAPI:
             _LOGGER.info(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
             return round(co2.co2, 2), round(temp.degrees_celsius, 2), round(humidity.percent_rh, 2)
 
-    async def async_set_altitude(self, altitude: float):
-        if not self._connection_established:
-            return
 
-        await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=altitude)

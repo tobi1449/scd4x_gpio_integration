@@ -1,4 +1,6 @@
 """Adds config flow for Blueprint."""
+from typing import Optional
+
 from homeassistant import config_entries
 import voluptuous as vol
 import logging
@@ -24,25 +26,24 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            _LOGGER.info(f"User gave {user_input[CONF_I2C]} as path. Testing.")
-            valid, serial = await self._test_i2cpath(user_input[CONF_I2C])
+            altitude = None
+            if CONF_ALTITUDE in user_input:
+                altitude = user_input.get(CONF_ALTITUDE)
 
-            if valid:
-                _LOGGER.info(f"Device Serial Number: {serial}")
-                user_input[CONF_SERIAL] = serial
-            else:
-                self._errors["base"] = "unable_to_connect"
-
-            altitude = user_input[CONF_ALTITUDE]
-
-            if altitude is int and -100 < altitude < 10000:
-                pass
-            else:
-                valid = False
+            if altitude is int and (-100 >= altitude or altitude >= 10000):
+                _LOGGER.info(f"Invalid altitude: {altitude}")
                 self._errors["base"] = "invalid_altitude"
+            else:
+                i2c_path = user_input[CONF_I2C]
+                _LOGGER.info(f"User gave {i2c_path} as path. Testing.")
+                valid, serial = await self._test_i2cpath(i2c_path, altitude)
 
-            if valid:
-                return self.async_create_entry(title="SCD4x Sensor", data=user_input)
+                if valid:
+                    _LOGGER.info(f"Device Serial Number: {serial}")
+                    user_input[CONF_SERIAL] = serial
+                    return self.async_create_entry(title="SCD4x Sensor", data=user_input)
+                else:
+                    self._errors["base"] = "unable_to_connect"
 
             return await self._show_config_form(user_input)
 
@@ -57,23 +58,24 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
-                    vol.Optional(CONF_ALTITUDE, default=user_input[CONF_ALTITUDE]): int,
+                    vol.Optional(CONF_ALTITUDE): int,
                 }
             ),
             errors=self._errors,
         )
 
-    async def _test_i2cpath(self, i2cpath):
+    async def _test_i2cpath(self, i2cpath: str, altitude: Optional[int]):
         serial = None
+        api = None
         try:
-            _LOGGER.info(f"Testing path {i2cpath}")
+            _LOGGER.info(f"Testing path {i2cpath}, altitude {altitude}")
             _LOGGER.info(f"Initializing API")
-            api = SCD4xAPI(i2cpath)
+            api = SCD4xAPI(i2cpath, altitude)
             serial = await api.async_initialize()
         except Exception as exception:
-            _LOGGER.error("Exception while testing i2c path.")
-            await api.async_stop()
-            print(exception.args)
+            _LOGGER.error(f"Exception while testing i2c path: {exception}")
+            if api is not None:
+                await api.async_stop()
             raise exception
         finally:
             _LOGGER.info(f"Stopping API")
