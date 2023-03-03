@@ -121,6 +121,6 @@ class SCD4xAPI:
             _LOGGER.info("Data ready, getting data")
             co2, temp, humidity = await asyncify(read_measurement)(scd4x=self._scd4x)
             _LOGGER.info(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
-            return round(co2.co2, 2), round(temp.degrees_celsius, 2), round(humidity.percent_rh, 2)
+            return co2.co2, temp.degrees_celsius, humidity.percent_rh
 
 
