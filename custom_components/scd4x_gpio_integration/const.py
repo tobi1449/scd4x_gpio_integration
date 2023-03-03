@@ -32,7 +32,6 @@ CONF_AVERAGE_WINDOW = "moving_average_window"
 # Defaults
 DEFAULT_NAME = DOMAIN
 
-
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------
 {NAME}

@@ -1,20 +1,20 @@
 {
-    "title": "SCD4X Integration",
-    "config": {
-        "step": {
-            "user": {
-                "title": "SCD4X Integration",
-                "description": "Enter the device path (usually /dev/i2c-x) of the SCD4x sensor.",
-                "data": {
-                    "i2c_path": "I2C device path",
-                    "altitude": "Altitude (optional)",
-                    "moving_average_window": "Time window for moving average in s (optional)"
-                }
-            }
-        },
-        "error": {
-            "unable_to_connect": "Unable to connect to sensor. Path might be invalid.",
-            "invalid_altitude": "Altitude invalid."
+  "title": "SCD4X Integration",
+  "config": {
+    "step": {
+      "user": {
+        "title": "SCD4X Integration",
+        "description": "Enter the device path (usually /dev/i2c-x) of the SCD4x sensor.",
+        "data": {
+          "i2c_path": "I2C device path",
+          "altitude": "Altitude (optional)",
+          "moving_average_window": "Time window for moving average in s (optional)"
         }
+      }
+    },
+    "error": {
+      "unable_to_connect": "Unable to connect to sensor. Path might be invalid.",
+      "invalid_altitude": "Altitude invalid."
     }
+  }
 }

@@ -13,13 +13,12 @@ from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .scd4x_api import SCD4xAPI
-
 from .const import (
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR, CONF_ALTITUDE, CONF_AVERAGE_WINDOW,
 )
+from .scd4x_api import SCD4xAPI
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -80,7 +79,8 @@ def recalculate_value(queue: Queue, new_value: float) -> float:
 
 class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
-    def __init__(self, hass: HomeAssistant, i2cpath: str, altitude: Optional[int], moving_average_window: Optional[int]) -> None:
+    def __init__(self, hass: HomeAssistant, i2cpath: str, altitude: Optional[int],
+                 moving_average_window: Optional[int]) -> None:
         _LOGGER.info("Initializing coordinator for SCD4x GPIO Integration")
         self.platforms = []
 

@@ -1,10 +1,9 @@
 """Adds config flow for Blueprint."""
+import logging
 from typing import Optional
 
-from homeassistant import config_entries
 import voluptuous as vol
-import logging
-
+from homeassistant import config_entries
 from homeassistant.helpers.config_validation import positive_int
 
 from . import SCD4xAPI

@@ -1,10 +1,9 @@
-import logging
 import asyncio
+import logging
 from typing import Optional
 
 import async_timeout
 from asyncer import asyncify
-
 from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection
 from sensirion_i2c_scd import Scd4xI2cDevice
 
@@ -122,5 +121,3 @@ class SCD4xAPI:
             co2, temp, humidity = await asyncify(read_measurement)(scd4x=self._scd4x)
             _LOGGER.info(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
             return co2.co2, temp.degrees_celsius, humidity.percent_rh
-
-
