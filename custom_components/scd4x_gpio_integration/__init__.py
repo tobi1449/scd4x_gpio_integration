@@ -3,7 +3,9 @@ Custom integration to integrate scd4x_gpio_integration with Home Assistant.
 """
 import asyncio
 import logging
+import statistics
 from datetime import timedelta
+from queue import Queue
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +18,7 @@ from .scd4x_api import SCD4xAPI
 from .const import (
     DOMAIN,
     PLATFORMS,
-    STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR, CONF_ALTITUDE,
+    STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR, CONF_ALTITUDE, CONF_AVERAGE_WINDOW,
 )
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -41,10 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if CONF_ALTITUDE in entry.data:
         altitude = entry.data.get(CONF_ALTITUDE)
 
+    moving_average_window = None
+    if CONF_AVERAGE_WINDOW in entry.data:
+        moving_average_window = entry.data.get(CONF_AVERAGE_WINDOW)
+
     _LOGGER.info(f"Configured I2C Path is {i2cpath}")
     _LOGGER.info(f"Configured Altitude is {altitude}")
+    _LOGGER.info(f"Configured Moving Average Time Window is {moving_average_window}")
 
-    coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath, altitude)
+    coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath, altitude, moving_average_window)
     await coordinator.async_setup()
     await coordinator.async_refresh()
 
@@ -63,13 +70,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
+def recalculate_value(queue: Queue, new_value: float) -> float:
+    if queue.full():
+        queue.get()
+
+    queue.put(new_value)
+    return statistics.mean(queue)
+
+
 class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
-    def __init__(self, hass: HomeAssistant, i2cpath: str, altitude: Optional[int]) -> None:
+    def __init__(self, hass: HomeAssistant, i2cpath: str, altitude: Optional[int], moving_average_window: Optional[int]) -> None:
         _LOGGER.info("Initializing coordinator for SCD4x GPIO Integration")
         self.platforms = []
 
         self._api = SCD4xAPI(i2cpath, altitude)
+        self._moving_average_window = moving_average_window
+        if self._moving_average_window is None or self._moving_average_window < 1:
+            self._moving_average_window = 1
+
+        self._co2_queue = Queue(self._moving_average_window)
+        self._temp_queue = Queue(self._moving_average_window)
+        self._hum_queue = Queue(self._moving_average_window)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -89,9 +111,9 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed()
 
             data = {
-                CO2_SENSOR: sensor_data[0],
-                TEMP_SENSOR: sensor_data[1],
-                HUMIDITY_SENSOR: sensor_data[2]
+                CO2_SENSOR: recalculate_value(self._co2_queue, sensor_data[0]),
+                TEMP_SENSOR: recalculate_value(self._temp_queue, sensor_data[1]),
+                HUMIDITY_SENSOR: recalculate_value(self._hum_queue, sensor_data[2])
             }
             return data
         except Exception as exception:

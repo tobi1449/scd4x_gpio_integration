@@ -5,10 +5,12 @@ from homeassistant import config_entries
 import voluptuous as vol
 import logging
 
+from homeassistant.helpers.config_validation import positive_int
+
 from . import SCD4xAPI
 from .const import (
     DOMAIN,
-    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE
+    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE, CONF_AVERAGE_WINDOW
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -52,6 +54,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
                     vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
+                    vol.Optional(CONF_AVERAGE_WINDOW): positive_int,
                 }
             ),
             errors=self._errors,
