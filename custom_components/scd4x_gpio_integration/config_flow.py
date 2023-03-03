@@ -26,24 +26,17 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            altitude = None
-            if CONF_ALTITUDE in user_input:
-                altitude = user_input.get(CONF_ALTITUDE)
+            i2c_path = user_input[CONF_I2C]
+            _LOGGER.info(f"User gave {i2c_path} as path. Testing.")
+            valid, serial = await self._test_i2cpath(i2c_path, altitude)
 
-            if altitude is int and (-100 >= altitude or altitude >= 10000):
-                _LOGGER.info(f"Invalid altitude: {altitude}")
-                self._errors["base"] = "invalid_altitude"
+            if valid:
+                _LOGGER.info(f"Device Serial Number: {serial}")
+                user_input[CONF_SERIAL] = serial
+
+                return self.async_create_entry(title="SCD4x Sensor", data=user_input)
             else:
-                i2c_path = user_input[CONF_I2C]
-                _LOGGER.info(f"User gave {i2c_path} as path. Testing.")
-                valid, serial = await self._test_i2cpath(i2c_path, altitude)
-
-                if valid:
-                    _LOGGER.info(f"Device Serial Number: {serial}")
-                    user_input[CONF_SERIAL] = serial
-                    return self.async_create_entry(title="SCD4x Sensor", data=user_input)
-                else:
-                    self._errors["base"] = "unable_to_connect"
+                self._errors["base"] = "unable_to_connect"
 
             return await self._show_config_form(user_input)
 
@@ -58,7 +51,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
-                    vol.Optional(CONF_ALTITUDE): int,
+                    vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
                 }
             ),
             errors=self._errors,
