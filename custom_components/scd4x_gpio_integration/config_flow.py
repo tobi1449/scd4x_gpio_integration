@@ -29,6 +29,11 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             i2c_path = user_input[CONF_I2C]
             _LOGGER.info(f"User gave {i2c_path} as path. Testing.")
+
+            altitude = None
+            if CONF_ALTITUDE in user_input:
+                altitude = user_input[CONF_ALTITUDE]
+
             valid, serial = await self._test_i2cpath(i2c_path, altitude)
 
             if valid:
