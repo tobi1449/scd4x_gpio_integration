@@ -111,9 +111,9 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed()
 
             data = {
-                CO2_SENSOR: recalculate_value(self._co2_queue, sensor_data[0]),
-                TEMP_SENSOR: recalculate_value(self._temp_queue, sensor_data[1]),
-                HUMIDITY_SENSOR: recalculate_value(self._hum_queue, sensor_data[2])
+                CO2_SENSOR: round(recalculate_value(self._co2_queue, sensor_data[0]), 2),
+                TEMP_SENSOR: round(recalculate_value(self._temp_queue, sensor_data[1]), 2),
+                HUMIDITY_SENSOR: round(recalculate_value(self._hum_queue, sensor_data[2]), 2)
             }
             return data
         except Exception as exception:
