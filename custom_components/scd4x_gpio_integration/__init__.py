@@ -69,12 +69,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def recalculate_value(queue: Queue, new_value: float) -> float:
+def calculate_moving_average(queue: Queue, new_value: float) -> float:
     if queue.full():
         queue.get()
 
     queue.put(new_value)
-    return statistics.mean(queue)
+    return statistics.mean(queue.queue)
 
 
 class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
@@ -111,12 +111,13 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed()
 
             data = {
-                CO2_SENSOR: round(recalculate_value(self._co2_queue, sensor_data[0]), 2),
-                TEMP_SENSOR: round(recalculate_value(self._temp_queue, sensor_data[1]), 2),
-                HUMIDITY_SENSOR: round(recalculate_value(self._hum_queue, sensor_data[2]), 2)
+                CO2_SENSOR: round(calculate_moving_average(self._co2_queue, sensor_data[0]), 2),
+                TEMP_SENSOR: round(calculate_moving_average(self._temp_queue, sensor_data[1]), 2),
+                HUMIDITY_SENSOR: round(calculate_moving_average(self._hum_queue, sensor_data[2]), 2)
             }
             return data
         except Exception as exception:
+            _LOGGER.error(f"Update failed: {exception}")
             raise UpdateFailed() from exception
 
     async def async_setup(self) -> None:
