@@ -62,13 +62,13 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
                     vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
                     vol.Optional(CONF_AVERAGE_WINDOW): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                    vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
+                    vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(float), vol.Number(scale=2), vol.Range(min=0, max=10)),
                 }
             ),
             errors=self._errors,
         )
 
-    async def _test_i2cpath(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[int]):
+    async def _test_i2cpath(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[float]):
         serial = None
         api = None
         try:

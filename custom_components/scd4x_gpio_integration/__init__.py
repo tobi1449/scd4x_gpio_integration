@@ -86,7 +86,7 @@ def calculate_moving_average(queue: Queue, new_value: float) -> float:
 class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, i2cpath: str, altitude: Optional[int],
-                 moving_average_window: Optional[int], temperature_offset: Optional[int]) -> None:
+                 moving_average_window: Optional[int], temperature_offset: Optional[float]) -> None:
         _LOGGER.debug("Initializing coordinator for SCD4x GPIO Integration")
         self.platforms = []
 

@@ -47,7 +47,7 @@ def get_sensor_altitude(scd4x: Scd4xI2cDevice) -> int:
 def set_temperature_offset(scd4x: Scd4xI2cDevice, temperature_offset):
     scd4x.set_temperature_offset(temperature_offset)
 
-def get_temperature_offset(scd4x: Scd4xI2cDevice) -> int:
+def get_temperature_offset(scd4x: Scd4xI2cDevice) -> float:
     return scd4x.get_temperature_offset()
 
 def persist_settings(scd4x: Scd4xI2cDevice):
@@ -55,7 +55,7 @@ def persist_settings(scd4x: Scd4xI2cDevice):
 
 
 class SCD4xAPI:
-    def __init__(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[int]) -> None:
+    def __init__(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[float]) -> None:
         _LOGGER.info("Initializing SCD4x API")
         self._scd4x = None
         self._i2c_connection = None
@@ -96,7 +96,7 @@ class SCD4xAPI:
                 should_save = True
 
             saved_temperature_offset = asyncify(get_temperature_offset)(scd4x=self._scd4x)
-            temperature_offset = self._temperature_offset if self._temperature_offset is not None else 4
+            temperature_offset = self._temperature_offset if self._temperature_offset is not None else 4.0
             if temperature_offset is not saved_temperature_offset:
                 _LOGGER.debug(f"Setting temperature offset to {self._temperature_offset}")
                 await asyncify(set_temperature_offset)(scd4x=self._scd4x, temperature_offset=self._temperature_offset)
