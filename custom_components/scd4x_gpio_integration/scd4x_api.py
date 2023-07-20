@@ -41,8 +41,17 @@ def read_measurement(scd4x: Scd4xI2cDevice) -> tuple:
 def set_sensor_altitude(scd4x: Scd4xI2cDevice, sensor_altitude):
     scd4x.set_sensor_altitude(sensor_altitude)
 
+def get_sensor_altitude(scd4x: Scd4xI2cDevice) -> int:
+    return scd4x.get_sensor_altitude()
+
 def set_temperature_offset(scd4x: Scd4xI2cDevice, temperature_offset):
     scd4x.set_temperature_offset(temperature_offset)
+
+def get_temperature_offset(scd4x: Scd4xI2cDevice) -> int:
+    return scd4x.get_temperature_offset()
+
+def persist_settings(scd4x: Scd4xI2cDevice):
+    scd4x.persist_settings()
 
 
 class SCD4xAPI:
@@ -77,16 +86,24 @@ class SCD4xAPI:
             serial = await asyncify(read_serial_number)(scd4x=self._scd4x)
             _LOGGER.debug(f"Serial Number {serial}")
 
-            if self._altitude is not None:
+            should_save = False
+
+            saved_altitude = asyncify(get_sensor_altitude)(scd4x=self._scd4x)
+            altitude = self._altitude if self._altitude is not None else 0
+            if altitude is not saved_altitude:
                 _LOGGER.debug(f"Setting altitude to {self._altitude}")
                 await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=self._altitude)
-            else:
-                _LOGGER.debug("Setting altitude to 0")
-                await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=0)
+                should_save = True
 
-            if self._temperature_offset is not None:
+            saved_temperature_offset = asyncify(get_temperature_offset)(scd4x=self._scd4x)
+            temperature_offset = self._temperature_offset if self._temperature_offset is not None else 4
+            if temperature_offset is not saved_temperature_offset:
                 _LOGGER.debug(f"Setting temperature offset to {self._temperature_offset}")
                 await asyncify(set_temperature_offset)(scd4x=self._scd4x, temperature_offset=self._temperature_offset)
+                should_save = True
+
+            if should_save is True:
+                await asyncify(persist_settings)(scd4x=self._scd4x)
 
             _LOGGER.debug("Reinitializing device.")
             await asyncify(reinit)(scd4x=self._scd4x)

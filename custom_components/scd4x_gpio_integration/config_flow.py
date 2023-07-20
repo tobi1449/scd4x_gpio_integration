@@ -4,7 +4,6 @@ from typing import Optional
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.helpers.config_validation import positive_int
 
 from . import SCD4xAPI
 from .const import (
