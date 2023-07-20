@@ -34,7 +34,11 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_ALTITUDE in user_input:
                 altitude = user_input[CONF_ALTITUDE]
 
-            valid, serial = await self._test_i2cpath(i2c_path, altitude)
+            temperature_offset = None
+            if CONF_TEMPERATURE_OFFSET in user_input:
+                temperature_offset = user_input[CONF_TEMPERATURE_OFFSET]
+
+            valid, serial = await self._test_i2cpath(i2c_path, altitude, temperature_offset)
 
             if valid:
                 _LOGGER.debug(f"Device Serial Number: {serial}")
@@ -58,20 +62,20 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
                     vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
-                    vol.Optional(CONF_AVERAGE_WINDOW): positive_int,
+                    vol.Optional(CONF_AVERAGE_WINDOW): vol.All(vol.Coerce(int), vol.Range(min=1)),
                     vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
                 }
             ),
             errors=self._errors,
         )
 
-    async def _test_i2cpath(self, i2cpath: str, altitude: Optional[int]):
+    async def _test_i2cpath(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[int]):
         serial = None
         api = None
         try:
             _LOGGER.debug(f"Testing path {i2cpath}, altitude {altitude}")
             _LOGGER.debug(f"Initializing API")
-            api = SCD4xAPI(i2cpath, altitude)
+            api = SCD4xAPI(i2cpath, altitude, temperature_offset)
             serial = await api.async_initialize()
         except Exception as exception:
             _LOGGER.error(f"Exception while testing i2c path: {exception}")

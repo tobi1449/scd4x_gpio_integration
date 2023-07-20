@@ -94,7 +94,6 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = SCD4xAPI(i2cpath, altitude, self._temperature_offset)
         self._moving_average_window = moving_average_window if moving_average_window is not None and moving_average_window > 0 else 1
 
-
         self._co2_queue = Queue(self._moving_average_window)
         self._temperature_queue = Queue(self._moving_average_window)
         self._humidity_queue = Queue(self._moving_average_window)

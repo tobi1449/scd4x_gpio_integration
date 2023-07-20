@@ -41,6 +41,9 @@ def read_measurement(scd4x: Scd4xI2cDevice) -> tuple:
 def set_sensor_altitude(scd4x: Scd4xI2cDevice, sensor_altitude):
     scd4x.set_sensor_altitude(sensor_altitude)
 
+def set_temperature_offset(scd4x: Scd4xI2cDevice, temperature_offset):
+    scd4x.set_temperature_offset(temperature_offset)
+
 
 class SCD4xAPI:
     def __init__(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[int]) -> None:
@@ -82,8 +85,8 @@ class SCD4xAPI:
                 await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=0)
 
             if self._temperature_offset is not None:
-                _LOGGER.debug(f"Setting temperature offset to {self._altitude}")
-                await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=self._altitude)
+                _LOGGER.debug(f"Setting temperature offset to {self._temperature_offset}")
+                await asyncify(set_temperature_offset)(scd4x=self._scd4x, temperature_offset=self._temperature_offset)
 
             _LOGGER.debug("Reinitializing device.")
             await asyncify(reinit)(scd4x=self._scd4x)
