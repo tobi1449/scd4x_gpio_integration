@@ -9,7 +9,7 @@ from homeassistant.helpers.config_validation import positive_int
 from . import SCD4xAPI
 from .const import (
     DOMAIN,
-    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE, CONF_AVERAGE_WINDOW
+    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE, CONF_AVERAGE_WINDOW, CONF_TEMPERATURE_OFFSET
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -28,7 +28,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             i2c_path = user_input[CONF_I2C]
-            _LOGGER.info(f"User gave {i2c_path} as path. Testing.")
+            _LOGGER.debug(f"User gave {i2c_path} as path. Testing.")
 
             altitude = None
             if CONF_ALTITUDE in user_input:
@@ -37,7 +37,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             valid, serial = await self._test_i2cpath(i2c_path, altitude)
 
             if valid:
-                _LOGGER.info(f"Device Serial Number: {serial}")
+                _LOGGER.debug(f"Device Serial Number: {serial}")
                 user_input[CONF_SERIAL] = serial
 
                 return self.async_create_entry(title="SCD4x Sensor", data=user_input)
@@ -59,6 +59,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
                     vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
                     vol.Optional(CONF_AVERAGE_WINDOW): positive_int,
+                    vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
                 }
             ),
             errors=self._errors,
@@ -68,8 +69,8 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         serial = None
         api = None
         try:
-            _LOGGER.info(f"Testing path {i2cpath}, altitude {altitude}")
-            _LOGGER.info(f"Initializing API")
+            _LOGGER.debug(f"Testing path {i2cpath}, altitude {altitude}")
+            _LOGGER.debug(f"Initializing API")
             api = SCD4xAPI(i2cpath, altitude)
             serial = await api.async_initialize()
         except Exception as exception:
@@ -78,12 +79,12 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await api.async_stop()
             raise exception
         finally:
-            _LOGGER.info(f"Stopping API")
+            _LOGGER.debug(f"Stopping API")
             await api.async_stop()
 
             if serial is None or serial == 0:
-                _LOGGER.info(f"No serial found: {serial}")
+                _LOGGER.debug(f"No serial found: {serial}")
                 return False, None
             else:
-                _LOGGER.info(f"Serial found: {serial}")
+                _LOGGER.debug(f"Serial found: {serial}")
                 return True, serial

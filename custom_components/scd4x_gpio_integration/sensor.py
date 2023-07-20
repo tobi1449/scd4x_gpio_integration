@@ -66,9 +66,9 @@ async def async_setup_entry(
         ),
     ]
 
-    _LOGGER.info(sensors[0].device_info)
-    _LOGGER.info(sensors[1].device_info)
-    _LOGGER.info(sensors[2].device_info)
+    _LOGGER.debug(sensors[0].device_info)
+    _LOGGER.debug(sensors[1].device_info)
+    _LOGGER.debug(sensors[2].device_info)
 
     async_add_entities(sensors)
 

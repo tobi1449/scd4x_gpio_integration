@@ -8,7 +8,8 @@
         "data": {
           "i2c_path": "I2C device path",
           "altitude": "Altitude (optional)",
-          "moving_average_window": "Time window for moving average in s (optional)"
+          "moving_average_window": "Time window for moving average in s (optional)",
+          "temperature_offset": "(Negative) Temperature Offset"
         }
       }
     },

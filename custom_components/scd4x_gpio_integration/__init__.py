@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR, CONF_ALTITUDE, CONF_AVERAGE_WINDOW,
+    CONF_TEMPERATURE_OFFSET,
 )
 from .scd4x_api import SCD4xAPI
 
@@ -46,16 +47,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if CONF_AVERAGE_WINDOW in entry.data:
         moving_average_window = entry.data.get(CONF_AVERAGE_WINDOW)
 
-    _LOGGER.info(f"Configured I2C Path is {i2cpath}")
-    _LOGGER.info(f"Configured Altitude is {altitude}")
-    _LOGGER.info(f"Configured Moving Average Time Window is {moving_average_window}")
+    temperature_offset = None
+    if CONF_TEMPERATURE_OFFSET in entry.data:
+        temperature_offset = entry.data.get(CONF_TEMPERATURE_OFFSET)
 
-    coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath, altitude, moving_average_window)
+    _LOGGER.debug(f"Configured I2C Path is {i2cpath}")
+    _LOGGER.debug(f"Configured Altitude is {altitude}")
+    _LOGGER.debug(f"Configured Moving Average Time Window is {moving_average_window}")
+    _LOGGER.debug(f"Configured Temperature Offset is {temperature_offset}")
+
+    coordinator = SCD4XDataUpdateCoordinator(hass, i2cpath, altitude, moving_average_window, temperature_offset)
     await coordinator.async_setup()
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
-        _LOGGER.info("Coordinator Last Update Success is false")
+        _LOGGER.debug("Coordinator Last Update Success is false")
         raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -80,18 +86,18 @@ def calculate_moving_average(queue: Queue, new_value: float) -> float:
 class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, i2cpath: str, altitude: Optional[int],
-                 moving_average_window: Optional[int]) -> None:
-        _LOGGER.info("Initializing coordinator for SCD4x GPIO Integration")
+                 moving_average_window: Optional[int], temperature_offset: Optional[int]) -> None:
+        _LOGGER.debug("Initializing coordinator for SCD4x GPIO Integration")
         self.platforms = []
 
-        self._api = SCD4xAPI(i2cpath, altitude)
-        self._moving_average_window = moving_average_window
-        if self._moving_average_window is None or self._moving_average_window < 1:
-            self._moving_average_window = 1
+        self._temperature_offset = temperature_offset if temperature_offset is not None else 4
+        self._api = SCD4xAPI(i2cpath, altitude, self._temperature_offset)
+        self._moving_average_window = moving_average_window if moving_average_window is not None and moving_average_window > 0 else 1
+
 
         self._co2_queue = Queue(self._moving_average_window)
-        self._temp_queue = Queue(self._moving_average_window)
-        self._hum_queue = Queue(self._moving_average_window)
+        self._temperature_queue = Queue(self._moving_average_window)
+        self._humidity_queue = Queue(self._moving_average_window)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -104,16 +110,16 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         try:
-            _LOGGER.info("Try to get new data from SCD4x API")
+            _LOGGER.debug("Try to get new data from SCD4x API")
             sensor_data = await self._api.async_read_data()
 
             if not sensor_data:
                 raise UpdateFailed()
 
             data = {
-                CO2_SENSOR: round(calculate_moving_average(self._co2_queue, sensor_data[0]), 2),
-                TEMP_SENSOR: round(calculate_moving_average(self._temp_queue, sensor_data[1]), 2),
-                HUMIDITY_SENSOR: round(calculate_moving_average(self._hum_queue, sensor_data[2]), 2)
+                CO2_SENSOR: round(calculate_moving_average(self._co2_queue, sensor_data[0]), 0),
+                TEMP_SENSOR: round(calculate_moving_average(self._temperature_queue, sensor_data[1]), 1),
+                HUMIDITY_SENSOR: round(calculate_moving_average(self._humidity_queue, sensor_data[2]), 0)
             }
             return data
         except Exception as exception:
@@ -122,7 +128,7 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup(self) -> None:
         try:
-            _LOGGER.info("Setting up SCD4x coordinator")
+            _LOGGER.debug("Setting up SCD4x coordinator")
             await self._api.async_initialize()
         except Exception as exception:
             await self._api.async_stop()

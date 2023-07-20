@@ -7,7 +7,7 @@ from asyncer import asyncify
 from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection
 from sensirion_i2c_scd import Scd4xI2cDevice
 
-TIMEOUT = 15
+TIMEOUT = 30
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -43,7 +43,7 @@ def set_sensor_altitude(scd4x: Scd4xI2cDevice, sensor_altitude):
 
 
 class SCD4xAPI:
-    def __init__(self, i2cpath: str, altitude: Optional[int]) -> None:
+    def __init__(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[int]) -> None:
         _LOGGER.info("Initializing SCD4x API")
         self._scd4x = None
         self._i2c_connection = None
@@ -51,41 +51,46 @@ class SCD4xAPI:
         self._connection_established = False
         self._i2cpath = i2cpath
         self._altitude = altitude
+        self._temperature_offset = temperature_offset
 
     async def async_initialize(self) -> int:
         async with async_timeout.timeout(TIMEOUT):
-            _LOGGER.info("Initialize API called.")
-            _LOGGER.info("Creating i2c transceiver.")
+            _LOGGER.debug("Initialize API called.")
+            _LOGGER.debug("Creating i2c transceiver.")
             self._i2c_transceiver = LinuxI2cTransceiver(self._i2cpath)
-            _LOGGER.info("Try opening connection via i2c transceiver.")
+            _LOGGER.debug("Try opening connection via i2c transceiver.")
             self._i2c_transceiver.open()
 
-            _LOGGER.info("Creating i2c connection.")
+            _LOGGER.debug("Creating i2c connection.")
             self._i2c_connection = I2cConnection(self._i2c_transceiver)
-            _LOGGER.info("Creating scd4x i2c device.")
+            _LOGGER.debug("Creating scd4x i2c device.")
             self._scd4x = Scd4xI2cDevice(self._i2c_connection)
 
-            _LOGGER.info("Stopping periodic measurements.")
+            _LOGGER.debug("Stopping periodic measurements.")
             await asyncify(stop_periodic_measurement)(scd4x=self._scd4x)
             await asyncio.sleep(1)
 
-            _LOGGER.info("Reading serial number.")
+            _LOGGER.debug("Reading serial number.")
             serial = await asyncify(read_serial_number)(scd4x=self._scd4x)
-            _LOGGER.info(f"Serial Number {serial}")
+            _LOGGER.debug(f"Serial Number {serial}")
 
             if self._altitude is not None:
-                _LOGGER.info(f"Setting altitude to {self._altitude}")
+                _LOGGER.debug(f"Setting altitude to {self._altitude}")
                 await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=self._altitude)
             else:
-                _LOGGER.info("Setting altitude to 0")
+                _LOGGER.debug("Setting altitude to 0")
                 await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=0)
 
-            _LOGGER.info("Reinitializing device.")
+            if self._temperature_offset is not None:
+                _LOGGER.debug(f"Setting temperature offset to {self._altitude}")
+                await asyncify(set_sensor_altitude)(scd4x=self._scd4x, sensor_altitude=self._altitude)
+
+            _LOGGER.debug("Reinitializing device.")
             await asyncify(reinit)(scd4x=self._scd4x)
             await asyncio.sleep(5)
 
             await asyncify(start_periodic_measurement)(scd4x=self._scd4x)
-            _LOGGER.info("Starting periodic measurements.")
+            _LOGGER.debug("Starting periodic measurements.")
 
             await asyncio.sleep(1)
 
@@ -94,7 +99,7 @@ class SCD4xAPI:
 
     async def async_stop(self) -> None:
         async with async_timeout.timeout(TIMEOUT):
-            _LOGGER.info("Stop API called.")
+            _LOGGER.debug("Stop API called.")
             try:
                 if self._scd4x is not None:
                     await asyncify(stop_periodic_measurement)(scd4x=self._scd4x)
@@ -117,7 +122,7 @@ class SCD4xAPI:
             while not await asyncify(get_data_ready_status)(scd4x=self._scd4x):
                 await asyncio.sleep(0.2)
 
-            _LOGGER.info("Data ready, getting data")
+            _LOGGER.debug("Data ready, getting data")
             co2, temp, humidity = await asyncify(read_measurement)(scd4x=self._scd4x)
-            _LOGGER.info(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
+            _LOGGER.debug(f"Data available: {co2.co2};{temp.degrees_celsius};{humidity.percent_rh}")
             return co2.co2, temp.degrees_celsius, humidity.percent_rh
