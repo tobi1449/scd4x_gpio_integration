@@ -10,7 +10,8 @@
   "requirements": [
     "sensirion-i2c-scd",
     "sensirion-i2c-driver",
-    "asyncer"
+    "asyncer",
+    "async-timeout"
   ],
   "codeowners": [
     "@tobi1449"

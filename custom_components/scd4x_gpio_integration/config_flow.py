@@ -54,12 +54,12 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._show_config_form(user_input)
 
-    async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
+    async def _show_config_form(self, user_input):  # pylint: disable=unused-argumentS
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_I2C, default=user_input[CONF_I2C]): str,
+                    vol.Required(CONF_I2C, default=user_input[CONF_I2C]): vol.Coerce(str),
                     vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
                     vol.Optional(CONF_AVERAGE_WINDOW): vol.All(vol.Coerce(int), vol.Range(min=1)),
                     vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(float), vol.Number(scale=2), vol.Range(min=0, max=10)),
