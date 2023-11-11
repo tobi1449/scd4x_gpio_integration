@@ -4,6 +4,6 @@ sensirion_i2c_driver
 sensirion_i2c_scd
 colorlog==6.7.0
 homeassistant>=2023.11.0
-pip>=21.0,<23.2
+pip>=21.0,<23.4
 ruff==0.0.292
 async-timeout
