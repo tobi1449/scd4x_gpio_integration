@@ -62,7 +62,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): vol.Coerce(str),
                     vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
                     vol.Optional(CONF_AVERAGE_WINDOW): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                    vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(float), vol.Number(scale=2), vol.Range(min=0, max=10)),
+                    vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(float), vol.Range(min=0, max=10)),
                 }
             ),
             errors=self._errors,
