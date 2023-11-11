@@ -6,7 +6,6 @@
         "co2_sensor",
         "humidity_sensor"
     ],
-    "hide_default_branch": true,
     "homeassistant": "2023.11.0",
     "render_readme": true,
     "zip_release": true
