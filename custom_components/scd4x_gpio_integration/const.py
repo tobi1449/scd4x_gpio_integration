@@ -29,6 +29,7 @@ CONF_SERIAL = "device_serial_number"
 CONF_ALTITUDE = "altitude"
 CONF_AVERAGE_WINDOW = "moving_average_window"
 CONF_TEMPERATURE_OFFSET = "temperature_offset"
+CONF_DEVICE_NAME = "device_name"
 
 # Defaults
 DEFAULT_NAME = DOMAIN

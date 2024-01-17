@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from . import SCD4xAPI
 from .const import (
     DOMAIN,
-    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE, CONF_AVERAGE_WINDOW, CONF_TEMPERATURE_OFFSET
+    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE, CONF_AVERAGE_WINDOW, CONF_TEMPERATURE_OFFSET, CONF_DEVICE_NAME
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -59,6 +59,7 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_DEVICE_NAME): vol.Coerce(str),
                     vol.Required(CONF_I2C, default=user_input[CONF_I2C]): vol.Coerce(str),
                     vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
                     vol.Optional(CONF_AVERAGE_WINDOW): vol.All(vol.Coerce(int), vol.Range(min=1)),

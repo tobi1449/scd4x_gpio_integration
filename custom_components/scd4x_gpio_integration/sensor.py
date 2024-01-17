@@ -22,7 +22,7 @@ from .const import (
     TEMP_SENSOR,
     DOMAIN,
     CO2_SENSOR,
-    HUMIDITY_SENSOR, CONF_SERIAL, HUMIDITY_ICON, CO2_ICON,
+    HUMIDITY_SENSOR, CONF_SERIAL, HUMIDITY_ICON, CO2_ICON, CONF_DEVICE_NAME,
 )
 from .entity import SCD4XEntity
 
@@ -42,6 +42,7 @@ async def async_setup_entry(
             coordinator,
             entry,
             HUMIDITY_SENSOR,
+            entry.data[CONF_DEVICE_NAME],
             SensorDeviceClass.HUMIDITY,
             PERCENTAGE,
             HUMIDITY_ICON
@@ -51,6 +52,7 @@ async def async_setup_entry(
             coordinator,
             entry,
             TEMP_SENSOR,
+            entry.data[CONF_DEVICE_NAME],
             SensorDeviceClass.TEMPERATURE,
             TEMP_CELSIUS,
             TEMP_ICON
@@ -60,6 +62,7 @@ async def async_setup_entry(
             coordinator,
             entry,
             CO2_SENSOR,
+            entry.data[CONF_DEVICE_NAME],
             SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
             CO2_ICON
@@ -82,6 +85,7 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
             coordinator,
             config_entry,
             key: str,
+            name: str,
             device_class: SensorDeviceClass,
             unit_of_measurement: str,
             icon: str,
@@ -92,7 +96,7 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._serial = self.config_entry.data[CONF_SERIAL]
         self._icon = icon
-        self.entity_id = generate_entity_id("sensor.{}", key, hass=hass)
+        self.entity_id = generate_entity_id("sensor.{}", "{0}_{1}".format(name, key), hass=hass)
 
     @property
     def name(self):
