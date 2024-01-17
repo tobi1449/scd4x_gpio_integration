@@ -1,11 +1,6 @@
 {
     "name": "SCD4x GPIO Integration",
     "filename": "scd4x_gpio_integration.zip",
-    "domains": [
-        "temperature_sensor",
-        "co2_sensor",
-        "humidity_sensor"
-    ],
     "homeassistant": "2023.11.0",
     "render_readme": true,
     "zip_release": true
