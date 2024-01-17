@@ -1,19 +1,19 @@
 {
   "domain": "scd4x_gpio_integration",
   "name": "SCD4X GPIO Integration",
-  "integration_type": "device",
+  "codeowners": [
+    "@tobi1449"
+  ],
+  "config_flow": true,  
   "documentation": "https://github.com/tobi1449/scd4x_gpio_integration",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/tobi1449/scd4x_gpio_integration/issues",
-  "version": "0.0.3",
-  "config_flow": true,
   "requirements": [
     "sensirion-i2c-scd",
     "sensirion-i2c-driver",
     "asyncer",
     "async-timeout"
   ],
-  "codeowners": [
-    "@tobi1449"
-  ]
+  "version": "0.0.3"
 }
