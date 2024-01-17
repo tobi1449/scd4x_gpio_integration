@@ -6,6 +6,7 @@
         "title": "SCD4X Integration",
         "description": "Enter the device path (usually /dev/i2c-x) of the SCD4x sensor.",
         "data": {
+          "device_name": "Device Name",
           "i2c_path": "I2C device path",
           "altitude": "Altitude (optional)",
           "moving_average_window": "Time window for moving average in s (optional)",
