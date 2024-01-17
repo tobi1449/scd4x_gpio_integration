@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import logging
+import traceback
 from typing import Optional
 
 import async_timeout
@@ -134,12 +135,14 @@ class SCD4xAPI:
                 if self._scd4x is not None:
                     await stop_periodic_measurement(self._scd4x)
             except Exception as exception:
-                _LOGGER.warning(f"Unable to stop SCD4x periodic measurements: {exception}")
+                _LOGGER.warning(f"Unable to stop SCD4x periodic measurements: {exception}"
+                                f"\r\n{traceback.format_exception(exception)}")
             try:
                 if self._i2c_transceiver is not None:
                     self._i2c_transceiver.close()
             except Exception as exception:
-                _LOGGER.warning(f"Unable to close i2c transceiver: {exception}")
+                _LOGGER.warning(f"Unable to close i2c transceiver: {exception}"
+                                f"\r\n{traceback.format_exception(exception)}")
             finally:
                 self._connection_established = False
 
