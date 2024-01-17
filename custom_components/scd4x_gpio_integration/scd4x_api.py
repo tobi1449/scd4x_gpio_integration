@@ -54,7 +54,7 @@ async def get_sensor_altitude(scd4x: Scd4xI2cDevice) -> int:
 
 async def set_temperature_offset(scd4x: Scd4xI2cDevice, temperature_offset):
     await run_async(
-        functools.partial(Scd4xI2cDevice.set_temperature_offset, self=scd4x, temperature_offset=temperature_offset))
+        functools.partial(Scd4xI2cDevice.set_temperature_offset, self=scd4x, t_offset=temperature_offset))
 
 
 async def get_temperature_offset(scd4x: Scd4xI2cDevice) -> float:

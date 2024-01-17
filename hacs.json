@@ -1,7 +1,5 @@
 {
     "name": "SCD4x GPIO Integration",
-    "filename": "scd4x_gpio_integration.zip",
-    "homeassistant": "2023.11.0",
-    "render_readme": true,
-    "zip_release": true
+    "homeassistant": "2024.1.0",
+    "render_readme": true
 }
