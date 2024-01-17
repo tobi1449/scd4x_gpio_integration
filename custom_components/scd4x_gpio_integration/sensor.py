@@ -42,7 +42,7 @@ async def async_setup_entry(
             coordinator,
             entry,
             HUMIDITY_SENSOR,
-            entry.data[CONF_DEVICE_NAME],
+            entry.data.get(CONF_DEVICE_NAME),
             SensorDeviceClass.HUMIDITY,
             PERCENTAGE,
             HUMIDITY_ICON
@@ -52,7 +52,7 @@ async def async_setup_entry(
             coordinator,
             entry,
             TEMP_SENSOR,
-            entry.data[CONF_DEVICE_NAME],
+            entry.data.get(CONF_DEVICE_NAME),
             SensorDeviceClass.TEMPERATURE,
             TEMP_CELSIUS,
             TEMP_ICON
@@ -62,7 +62,7 @@ async def async_setup_entry(
             coordinator,
             entry,
             CO2_SENSOR,
-            entry.data[CONF_DEVICE_NAME],
+            entry.data.get(CONF_DEVICE_NAME),
             SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
             CO2_ICON
