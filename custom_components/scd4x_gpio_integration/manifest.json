@@ -12,7 +12,6 @@
   "requirements": [
     "sensirion-i2c-scd",
     "sensirion-i2c-driver",
-    "asyncer",
     "async-timeout"
   ],
   "version": "0.0.3"
