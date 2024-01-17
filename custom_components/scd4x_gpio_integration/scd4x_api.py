@@ -98,7 +98,7 @@ class SCD4xAPI:
 
             should_save = False
 
-            saved_altitude = get_sensor_altitude(self._scd4x)
+            saved_altitude = await get_sensor_altitude(self._scd4x)
             altitude = self._altitude if self._altitude is not None else 0
             if altitude is not saved_altitude:
                 _LOGGER.debug(f"Setting altitude to {self._altitude}")
