@@ -6,10 +6,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from . import SCD4xAPI
-from .const import (
-    DOMAIN,
-    CONF_I2C, CONF_SERIAL, CONF_ALTITUDE, CONF_AVERAGE_WINDOW, CONF_TEMPERATURE_OFFSET, CONF_DEVICE_NAME
-)
+from .const import (DOMAIN, CONF_I2C, CONF_SERIAL, CONF_ALTITUDE, CONF_AVERAGE_WINDOW, CONF_TEMPERATURE_OFFSET,
+                    CONF_DEVICE_NAME)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -49,25 +47,21 @@ class Scd4xConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self._show_config_form(user_input)
 
-        user_input = {CONF_I2C: "", CONF_ALTITUDE: None}
+        user_input = {CONF_DEVICE_NAME: "", CONF_I2C: "", CONF_ALTITUDE: None, CONF_AVERAGE_WINDOW: 60,
+                      CONF_TEMPERATURE_OFFSET: 4}
         # Provide defaults for form
 
         return await self._show_config_form(user_input)
 
     async def _show_config_form(self, user_input):  # pylint: disable=unused-argumentS
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_NAME): vol.Coerce(str),
-                    vol.Required(CONF_I2C, default=user_input[CONF_I2C]): vol.Coerce(str),
-                    vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
-                    vol.Optional(CONF_AVERAGE_WINDOW): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                    vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(float), vol.Range(min=0, max=10)),
-                }
-            ),
-            errors=self._errors,
-        )
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(
+            {vol.Required(CONF_DEVICE_NAME): vol.Coerce(str),
+                vol.Required(CONF_I2C, default=user_input[CONF_I2C]): vol.Coerce(str),
+                vol.Optional(CONF_ALTITUDE): vol.All(vol.Coerce(int), vol.Range(min=-100, max=10000)),
+                vol.Optional(CONF_AVERAGE_WINDOW): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Optional(CONF_TEMPERATURE_OFFSET, default=4): vol.All(vol.Coerce(float),
+                                                                          vol.Range(min=0, max=10)), }),
+            errors=self._errors, )
 
     async def _test_i2cpath(self, i2cpath: str, altitude: Optional[int], temperature_offset: Optional[float]):
         serial = None
