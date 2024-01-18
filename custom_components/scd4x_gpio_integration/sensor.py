@@ -96,12 +96,13 @@ class Scd4xSensor(SCD4XEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._serial = self.config_entry.data[CONF_SERIAL]
         self._icon = icon
+        self._name = name
         self.entity_id = generate_entity_id("sensor.{}", "{0}_{1}".format(name, key), hass=hass)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{DEFAULT_NAME}.{self._key}"
+        return f"{self._name} {self._key}"
 
     @property
     def unique_id(self):
