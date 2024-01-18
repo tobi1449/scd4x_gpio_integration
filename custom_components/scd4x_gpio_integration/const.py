@@ -14,10 +14,10 @@ TEMP_ICON = "mdi:thermometer"
 HUMIDITY_ICON = "mdi:water-percent"
 CO2_ICON = "mdi:molecule-co2"
 
-# Sensor Keys
-TEMP_SENSOR = "temperature_sensor"
-CO2_SENSOR = "co2_sensor"
-HUMIDITY_SENSOR = "humidity_sensor"
+# Sensor type Keys
+TEMP_KEY = "temperature"
+CO2_KEY = "co2"
+HUMIDITY_KEY = "humidity"
 
 # Platforms
 PLATFORMS = [Platform.SENSOR]

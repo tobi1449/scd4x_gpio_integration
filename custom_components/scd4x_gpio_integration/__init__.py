@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DOMAIN,
     PLATFORMS,
-    STARTUP_MESSAGE, CONF_I2C, TEMP_SENSOR, CO2_SENSOR, HUMIDITY_SENSOR, CONF_ALTITUDE, CONF_AVERAGE_WINDOW,
+    STARTUP_MESSAGE, CONF_I2C, TEMP_KEY, CO2_KEY, HUMIDITY_KEY, CONF_ALTITUDE, CONF_AVERAGE_WINDOW,
     CONF_TEMPERATURE_OFFSET,
 )
 from .scd4x_api import SCD4xAPI
@@ -116,9 +116,9 @@ class SCD4XDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed()
 
             data = {
-                CO2_SENSOR: round(calculate_moving_average(self._co2_queue, sensor_data[0]), 0),
-                TEMP_SENSOR: round(calculate_moving_average(self._temperature_queue, sensor_data[1]), 1),
-                HUMIDITY_SENSOR: round(calculate_moving_average(self._humidity_queue, sensor_data[2]), 0)
+                CO2_KEY: round(calculate_moving_average(self._co2_queue, sensor_data[0]), 0),
+                TEMP_KEY: round(calculate_moving_average(self._temperature_queue, sensor_data[1]), 1),
+                HUMIDITY_KEY: round(calculate_moving_average(self._humidity_queue, sensor_data[2]), 0)
             }
             return data
         except Exception as exception:

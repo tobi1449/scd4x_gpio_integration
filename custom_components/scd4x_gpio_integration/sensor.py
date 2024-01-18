@@ -19,10 +19,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     DEFAULT_NAME,
     TEMP_ICON,
-    TEMP_SENSOR,
     DOMAIN,
-    CO2_SENSOR,
-    HUMIDITY_SENSOR, CONF_SERIAL, HUMIDITY_ICON, CO2_ICON, CONF_DEVICE_NAME,
+    TEMP_KEY,
+    CO2_KEY,
+    HUMIDITY_KEY, CONF_SERIAL, HUMIDITY_ICON, CO2_ICON, CONF_DEVICE_NAME,
 )
 from .entity import SCD4XEntity
 
@@ -41,7 +41,7 @@ async def async_setup_entry(
             hass,
             coordinator,
             entry,
-            HUMIDITY_SENSOR,
+            HUMIDITY_KEY,
             entry.data.get(CONF_DEVICE_NAME),
             SensorDeviceClass.HUMIDITY,
             PERCENTAGE,
@@ -51,7 +51,7 @@ async def async_setup_entry(
             hass,
             coordinator,
             entry,
-            TEMP_SENSOR,
+            TEMP_KEY,
             entry.data.get(CONF_DEVICE_NAME),
             SensorDeviceClass.TEMPERATURE,
             TEMP_CELSIUS,
@@ -61,7 +61,7 @@ async def async_setup_entry(
             hass,
             coordinator,
             entry,
-            CO2_SENSOR,
+            CO2_KEY,
             entry.data.get(CONF_DEVICE_NAME),
             SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
