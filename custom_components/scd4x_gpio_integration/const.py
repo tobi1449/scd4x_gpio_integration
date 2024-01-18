@@ -5,7 +5,7 @@ from homeassistant.const import Platform
 NAME = "SCD4x GPIO Integration"
 DOMAIN = "scd4x_gpio_integration"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.0.1"
+VERSION = "0.0.7"
 ATTRIBUTION = ""
 ISSUE_URL = "https://github.com/tobi1449/scd4x_gpio_integration/issues"
 
